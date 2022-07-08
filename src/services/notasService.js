@@ -50,6 +50,24 @@ const excluir = async (params) => {
     return query.rowCount == 1;
 }
 
+const mediaAluno = async (params) => {
+    let sql = `
+        select 
+            n.nota,
+            n.peso
+        from notas as n
+        inner join alunos as a on (n.id_aluno = a.id)
+        inner join pessoas as p on (a.id_pessoa = p.id)
+        where a.matricula = $1 and n.id_disciplina = $2
+    `;
+    
+    
+}
+
+const mediaDisciplina = async (params) => {
+
+}
+
 module.exports.getAllNotas = getAll;
 module.exports.getNotaById = getById;
 module.exports.persistirNota = persistir;

@@ -39,6 +39,14 @@ const excluir = async (req, res) => {
     }
 }
 
+const mediaAluno = async (req, res) => {
+    try {
+        let 
+    } catch (error) {
+        
+    }
+}
+
 module.exports.getAllNotas = getAll;
 module.exports.getNotaById = getById;
 module.exports.persistirNota = persistir;
