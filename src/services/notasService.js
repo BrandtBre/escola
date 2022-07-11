@@ -51,24 +51,101 @@ const excluir = async (params) => {
 }
 
 const mediaAluno = async (params) => {
-    let sql = `
-        select 
-            n.nota,
-            n.peso
-        from notas as n
-        inner join alunos as a on (n.id_aluno = a.id)
-        inner join pessoas as p on (a.id_pessoa = p.id)
-        where a.matricula = $1 and n.id_disciplina = $2
-    `;
-    
-    
+   
+  let { matricula, id_disciplina, data_inicial, data_final } = params;
+
+  let sql = `
+      select 
+          a.id,
+          p.nome,
+          n.nota,
+          n.peso
+      from notas as n
+      inner join alunos as a on (n.id_aluno = a.id)
+      inner join pessoas as p on (a.id_pessoa = p.id)
+      where a.matricula = $1 and n.id_disciplina = $2 and n.datahora::date between $3 and $4
+  `;
+
+
+  let response = await db.query(sql, [matricula, id_disciplina, data_inicial, data_final]);
+
+  let somaNotas = 0;
+  let somaPesos = 0;
+  
+  response.rows.forEach(notaDoAluno => {
+      somaNotas += (parseFloat(notaDoAluno.nota) * (parseFloat(notaDoAluno.peso)))
+      somaPesos += parseFloat(notaDoAluno.peso)
+  });
+
+
+  let media = somaNotas / somaPesos;
+  let mensagem = media < 5.0 ? `${response.rows[0].nome}, você está reprovado` : (media >= 5 && media < 7 ? `${response.rows[0].nome}, você está em recuperação` : `${response.rows[0].nome}, você está aprovado`)
+
+  return {
+      notas: response.rows.map(nota => {
+        return { peso: nota.peso, nota: nota.nota }
+      }),
+      media: media,
+      msg: mensagem
+      
+  }
 }
 
-const mediaDisciplina = async (params) => {
+const mediaAllAlunos = async (params) => {
+  
+  let { id_disciplina, data_inicial, data_final } = params;
 
+  let sql = `
+      select 
+          p.nome,
+          n.nota,
+          n.peso,
+          a.matricula,
+          n.id_disciplina,
+          a.id
+      from notas as n
+      inner join alunos as a on (n.id_aluno = a.id)
+      inner join pessoas as p on (a.id_pessoa = p.id)
+      where n.id_disciplina = $1 and n.datahora::date between $2 and $3
+  `;
+
+  let response = await db.query(sql, [ id_disciplina, data_inicial, data_final]);
+
+  let somaNotas = 0;
+  let somaPesos = 0;
+  let media = 0;
+  let medias = [];
+
+
+  for (let index = 0; index < response.rows.length; index++) {
+    somaNotas += parseFloat(response.rows[index].nota) * parseFloat(response.rows[index].peso)
+    somaPesos += parseFloat(response.rows[index].peso)
+    if (!response.rows[index + 1] || response.rows[index].id !== response.rows[index + 1].id) {
+      media = (somaNotas / somaPesos).toFixed(2);
+      somaNotas = 0;
+      somaPesos = 0;
+      
+      let mensagem = media < 5.0 ? `${response.rows[index].nome}, você está reprovado` : (media >= 5 && media < 7 ? `${response.rows[index].nome}, você está em recuperação` : `${response.rows[index].nome}, você está aprovado`)
+      
+      medias.push({
+        nome: response.rows[index].nome,
+        media: media,
+        situacao: mensagem
+      })
+      
+    }
+    
+  
+  }
+  
+  
+  return medias;
+ 
 }
 
 module.exports.getAllNotas = getAll;
 module.exports.getNotaById = getById;
 module.exports.persistirNota = persistir;
 module.exports.excluirNota = excluir;
+module.exports.mediaAluno = mediaAluno;
+module.exports.mediaAllAlunos = mediaAllAlunos;

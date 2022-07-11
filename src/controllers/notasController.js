@@ -41,13 +41,27 @@ const excluir = async (req, res) => {
 
 const mediaAluno = async (req, res) => {
     try {
-        let 
-    } catch (error) {
-        
+        const response = await service.mediaAluno(req.body);
+        res.status(200).send(response);
+    } catch (err) {
+        res.status(500).send(err);
     }
 }
+
+const mediaAllAlunos = async (req, res) => {
+    try {
+        const response = await service.mediaAllAlunos(req.body);
+        res.status(200).send(response);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+}
+
+
 
 module.exports.getAllNotas = getAll;
 module.exports.getNotaById = getById;
 module.exports.persistirNota = persistir;
 module.exports.excluirNota = excluir;
+module.exports.mediaAluno = mediaAluno;
+module.exports.mediaAllAlunos = mediaAllAlunos;
